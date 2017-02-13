@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-std::string getErrorMsg()
+static std::string getErrorMsg()
 {
 	std::mutex lockToErrorString;
 	lockToErrorString.lock();

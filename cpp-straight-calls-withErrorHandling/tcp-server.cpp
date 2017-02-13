@@ -11,7 +11,7 @@
 
 #include <unistd.h>  // close()
 
-std::string getErrorMsg()
+static std::string getErrorMsg()
 {
 	std::mutex lockToErrorString;
 	lockToErrorString.lock();
