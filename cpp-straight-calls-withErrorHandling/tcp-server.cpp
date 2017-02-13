@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <mutex>
 
 // headers for socket(), getaddrinfo() and friends
 #include <arpa/inet.h>
@@ -10,6 +11,15 @@
 
 #include <unistd.h>  // close()
 
+std::string getErrorMsg()
+{
+	std::mutex lockToErrorString;
+	lockToErrorString.lock();
+	char *errMsg = strerror(errno);
+	std::string returnString(errMsg);
+	lockToErrorString.unlock();
+	return returnString;
+}
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +45,8 @@ int main(int argc, char *argv[])
 	// man getaddrinfo
 	int gAddRes = getaddrinfo(NULL, portNum, &hints, &res);
 	if (gAddRes != 0) {
-		std::cerr << gai_strerror(gAddRes) << "\n";
+		// std::cerr << gai_strerror(gAddRes) << "\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		return -2;
 	}
 
@@ -102,7 +113,8 @@ int main(int argc, char *argv[])
 	// these calls usually return -1 as result of some error
 	int sockFD = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 	if (sockFD == -1) {
-		std::cerr << "Error while creating socket\n";
+		// std::cerr << "Error while creating socket\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		freeaddrinfo(res);
 		return -4;
 	}
@@ -111,7 +123,8 @@ int main(int argc, char *argv[])
 	// Let's bind address to our socket we've just created
 	int bindR = bind(sockFD, p->ai_addr, p->ai_addrlen);
 	if (bindR == -1) {
-		std::cerr << "Error while binding socket\n";
+		// std::cerr << "Error while binding socket\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 
 		// if some error occurs, make sure to close socket and free resources
 		close(sockFD);
@@ -123,7 +136,8 @@ int main(int argc, char *argv[])
 	// finally start listening for connections on our socket
 	int listenR = listen(sockFD, backLog);
 	if (listenR == -1) {
-		std::cerr << "Error while Listening on socket\n";
+		// std::cerr << "Error while Listening on socket\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 
 		// if some error occurs, make sure to close socket and free resources
 		close(sockFD);
@@ -150,7 +164,8 @@ int main(int argc, char *argv[])
 		int newFD
 		  = accept(sockFD, (sockaddr *) &client_addr, &client_addr_size);
 		if (newFD == -1) {
-			std::cerr << "Error while Accepting on socket\n";
+			// std::cerr << "Error while Accepting on socket\n";
+			std::cerr << "	" << getErrorMsg() << '\n';
 			continue;
 		}
 

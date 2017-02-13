@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <mutex>
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -8,6 +9,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+std::string getErrorMsg()
+{
+	std::mutex lockToErrorString;
+	lockToErrorString.lock();
+	char *errMsg = strerror(errno);
+	std::string returnString(errMsg);
+	lockToErrorString.unlock();
+	return returnString;
+}
 
 int main(int argc, char *argv[])
 {
@@ -29,7 +39,8 @@ int main(int argc, char *argv[])
 
 	int gAddRes = getaddrinfo(ipAddress, portNum, &hints, &p);
 	if (gAddRes != 0) {
-		std::cerr << gai_strerror(gAddRes) << "\n";
+		// std::cerr << gai_strerror(gAddRes) << "\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		return -2;
 	}
 
@@ -41,7 +52,8 @@ int main(int argc, char *argv[])
 	// socket() call creates a new socket and returns it's descriptor
 	int sockFD = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 	if (sockFD == -1) {
-		std::cerr << "Error while creating socket\n";
+		// std::cerr << "Error while creating socket\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		return -4;
 	}
 
@@ -55,7 +67,8 @@ int main(int argc, char *argv[])
 	int connectR = connect(sockFD, p->ai_addr, p->ai_addrlen);
 	if (connectR == -1) {
 		close(sockFD);
-		std::cerr << "Error while connecting socket\n";
+		// std::cerr << "Error while connecting socket\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		return -5;
 	}
 
@@ -67,7 +80,8 @@ int main(int argc, char *argv[])
 	// will be demonstrated in another example to keep this minimal
 	auto bytes_recv = recv(sockFD, &reply.front(), reply.size(), 0);
 	if (bytes_recv == -1) {
-		std::cerr << "Error while receiving bytes\n";
+		// std::cerr << "Error while receiving bytes\n";
+		std::cerr << "	" << getErrorMsg() << '\n';
 		return -6;
 	}
 
