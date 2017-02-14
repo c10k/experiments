@@ -9,9 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-static std::string getErrorMsg()
+std::string getErrorMsg()
 {
-	std::mutex lockToErrorString;
+	static std::mutex lockToErrorString;
 	lockToErrorString.lock();
 	char *errMsg = strerror(errno);
 	std::string returnString(errMsg);
