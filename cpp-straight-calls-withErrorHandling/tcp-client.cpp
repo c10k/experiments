@@ -12,11 +12,10 @@
 std::string getErrorMsg()
 {
 	static std::mutex lockToErrorString;
-	lockToErrorString.lock();
+	std::lock_guard<std::mutex> lockGuard(lockToErrorString);
 	char *errMsg = strerror(errno);
 	std::string returnString(errMsg);
-	lockToErrorString.unlock();
-	return returnString;
+	return returnString;;
 }
 
 int main(int argc, char *argv[])
