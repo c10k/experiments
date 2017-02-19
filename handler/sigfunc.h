@@ -1,6 +1,8 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wait.h>
+#include <stdexcept>
 
 typedef void Sigfunc(int);
 
@@ -39,12 +41,18 @@ Signal(int signo, Sigfunc *func)
 	return(sigfunc);
 }
 
-void sig_chld(int signo)
+void handle(int signo)
 {
 	pid_t pid;
 	int stat;
-
-	while( (pid = waitpid(-1, &stat, WNOHANG)) > 0);
-
-	return;
+	switch(signo){
+		case SIGCHLD:
+		while( (pid = waitpid(-1, &stat, WNOHANG)) > 0);
+		break;
+		case SIGPIPE:
+		throw std::runtime_error("Broken pipe.");
+		break;
+		//more signals to be added here
+	}
+		return;
 }
