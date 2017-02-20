@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <wait.h>
 #include <stdexcept>
+#include <unistd.h>
+#include <string.h>
 
 typedef void Sigfunc(int);
 
@@ -35,7 +37,8 @@ Signal(int signo, Sigfunc *func)
 	Sigfunc	*sigfunc;
 
 	if ( (sigfunc = signal(signo, func)) == SIG_ERR){
-		printf("signal error\n");
+		const char buf[] = "signal error\n";
+		write(STDOUT_FILENO, buf, strlen(buf));
 		exit(1);
 	}
 	return(sigfunc);
@@ -52,6 +55,12 @@ void handle(int signo)
 		case SIGPIPE:
 		throw std::runtime_error("Broken pipe.");
 		break;
+		case SIGINT:
+		const char buf[] = "\nExiting now...\n";
+		write(STDOUT_FILENO, buf, strlen(buf));
+		exit(0);
+		break;
+
 		//more signals to be added here
 	}
 		return;
