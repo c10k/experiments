@@ -15,7 +15,7 @@ std::string getErrorMsg()
 	std::lock_guard<std::mutex> lockGuard(lockToErrorString);
 	char *errMsg = strerror(errno);
 	std::string returnString(errMsg);
-	return returnString;;
+	return returnString;
 }
 
 int main(int argc, char *argv[])
