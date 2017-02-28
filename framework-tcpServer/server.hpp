@@ -45,11 +45,9 @@ private:
 			}
 
 			for (auto &eachConnectedSocket : connectedSockets) {
-				if
-					!(eachConnectedSocket.revents & pollServer::events::INVAL)
+				if !(eachConnectedSocket.revents & pollServer::events::INVAL)
 					{
-						if (eachConnectedSocket.fd
-						    == listenSocket.getSocket()) {
+						if (eachConnectedSocket.fd == listenSocket.getSocket()) {
 							// accept connections here and push_back them to
 							// connectedSockets vector with their events set for
 							// input, error, hangup.
@@ -109,8 +107,7 @@ public:
 
 		try {
 
-			listenSocket.start(const char _addr[], const int _port,
-			                   const int _q);
+			listenSocket.start(const char _addr[], const int _port, const int _q);
 			mainServerThread(&process);
 
 		} catch (...) {
