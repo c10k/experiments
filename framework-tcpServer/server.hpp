@@ -3,6 +3,7 @@
 #include <functional>
 #include <thread>
 #include <poll.h>
+#include <sys/resource.h>
 
 
 namespace pollServer {
@@ -28,7 +29,9 @@ private:
 	net::Socket listenSocket;
 	// std::vector<net::Socket> connectedSockets;
 	std::thread mainServerThread;
-	std::vector<struct pollfd> connectedSockets;  // this vector size should be no maximum than RLIMIT_NOFILE
+	std::vector<struct pollfd> connectedSockets;  // this vector size should be
+	                                              // no maximum than
+	                                              // RLIMIT_NOFILE
 
 	void process()
 	{
@@ -45,7 +48,7 @@ private:
 			}
 
 			for (auto &eachConnectedSocket : connectedSockets) {
-				if !(eachConnectedSocket.revents & pollServer::events::INVAL)
+				if (!(eachConnectedSocket.revents & pollServer::events::INVAL))
 					{
 						if (eachConnectedSocket.fd == listenSocket.getSocket()) {
 							// accept connections here and push_back them to
@@ -75,12 +78,27 @@ private:
 				else {
 					// if socket has been closed then remove it from vector
 					// outside this loop, after noting it's index here OR
-					// instead of that, make the fd member -1 and when connectedSockets
-					// size reaches RLIMIT_NOFILE then only traverse connectedSockets
+					// instead of that, make the fd member -1 and when
+					// connectedSockets
+					// size reaches RLIMIT_NOFILE then only traverse
+					// connectedSockets
 					// and remove all those objects where fd is -1.
+					eachConnectedSocket.fd = -1;
 				}
 			}
-		}
+
+			auto ptr = std::make_unique<rlimit>();
+			if ( (auto res = getrlimit(RLIMIT_NOFILE, ptr)) != -1){
+				if ( ptr -> rlim_cur == connectedSockets.size()){
+					connectedSockets.erase(
+						std::remove(connectedSockets.begin(), connectedSockets.end(),
+					  		[](const struct pollfd &conn) { return conn.fd == -1; })
+					, connectedSockets.end());
+				}
+			}else{
+				auto currErrNo = errno;
+				throw std::runtime_error(net::methods::getErrorMsg(currErrno));
+			}
 	}
 
 public:
